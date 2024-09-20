@@ -10,6 +10,20 @@ class AccountService
         file_put_contents(self::$filePath, json_encode($accounts, JSON_PRETTY_PRINT));
     }
 
+    private function readAccounts(): array
+    {
+        if (!file_exists(self::$filePath)) {
+            return [];
+        }
+        return json_decode(file_get_contents(self::$filePath), true) ?? [];
+    }
+
+    public function getBalance(string $accountId): ?int
+    {
+        $accounts = $this->readAccounts();
+        return $accounts[$accountId] ?? null;
+    }
+
     public function reset(): void
     {
         $this->writeAccounts([
