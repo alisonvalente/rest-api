@@ -24,11 +24,35 @@ class AccountService
         return $accounts[$accountId] ?? null;
     }
 
+    public function createAccount(string $accountId, int $initialBalance = 0): void
+    {
+        $accounts = $this->readAccounts();
+        if (!isset($accounts[$accountId])) {
+            $accounts[$accountId] = $initialBalance;
+            $this->writeAccounts($accounts);
+        }
+    }
+
+    public function deposit(string $accountId, int $amount): void
+    {
+        $accounts = $this->readAccounts();
+        if (isset($accounts[$accountId])) {
+            $accounts[$accountId] += $amount;
+            $this->writeAccounts($accounts);
+        }
+    }
+
+    public function withdraw(string $accountId, int $amount): void
+    {
+        $accounts = $this->readAccounts();
+        if (isset($accounts[$accountId])) {
+            $accounts[$accountId] -= $amount;
+            $this->writeAccounts($accounts);
+        }
+    }
+
     public function reset(): void
     {
-        $this->writeAccounts([
-            '100' => 0,
-            '300' => 0,
-        ]);
+        $this->writeAccounts([]);
     }
 }
