@@ -54,31 +54,65 @@ class AccountController
 
     private function handleDeposit(array $data): JsonResponse
     {
+        if (!isset($data['destination'], $data['amount']) || !is_numeric($data['amount']) || $data['amount'] <= 0) {
+            return new JsonResponse(['error' => 'Invalid destination or amount'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
         $this->createAccountIfNotExists($data['destination']);
-        $this->accountService->deposit($data['destination'], $data['amount']);
-        return new JsonResponse(['destination' => ['id' => $data['destination'], 'balance' => $this->accountService->getBalance($data['destination'])]], JsonResponse::HTTP_CREATED);
+        $this->accountService->deposit($data['destination'], (int) $data['amount']);
+
+        return new JsonResponse([
+            'destination' => [
+                'id' => $data['destination'], 
+                'balance' => $this->accountService->getBalance($data['destination'])
+            ]
+        ], JsonResponse::HTTP_CREATED);
     }
 
     private function handleWithdraw(array $data): JsonResponse
     {
+        if (!isset($data['origin'], $data['amount']) || !is_numeric($data['amount']) || $data['amount'] <= 0) {
+            return new JsonResponse(['error' => 'Invalid origin or amount'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
         if ($this->accountService->getBalance($data['origin']) === null) {
             return new JsonResponse(0, JsonResponse::HTTP_NOT_FOUND);
         }
-        $this->accountService->withdraw($data['origin'], $data['amount']);
-        return new JsonResponse(['origin' => ['id' => $data['origin'], 'balance' => $this->accountService->getBalance($data['origin'])]], JsonResponse::HTTP_CREATED);
+
+        $this->accountService->withdraw($data['origin'], (int) $data['amount']);
+
+        return new JsonResponse([
+            'origin' => [
+                'id' => $data['origin'], 
+                'balance' => $this->accountService->getBalance($data['origin'])
+            ]
+        ], JsonResponse::HTTP_CREATED);
     }
 
     private function handleTransfer(array $data): JsonResponse
     {
-        if ($this->accountService->getBalance($data['origin']) === null || $this->accountService->getBalance($data['destination']) === null) {
+        if (!isset($data['origin'], $data['destination'], $data['amount']) || !is_numeric($data['amount']) || $data['amount'] <= 0) {
+            return new JsonResponse(['error' => 'Invalid transfer data'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        if ($this->accountService->getBalance($data['origin']) === null) {
             return new JsonResponse(0, JsonResponse::HTTP_NOT_FOUND);
         }
-        $this->accountService->withdraw($data['origin'], $data['amount']);
+
         $this->createAccountIfNotExists($data['destination']);
-        $this->accountService->deposit($data['destination'], $data['amount']);
+        
+        $this->accountService->withdraw($data['origin'], (int) $data['amount']);
+        $this->accountService->deposit($data['destination'], (int) $data['amount']);
+
         return new JsonResponse([
-            'origin' => ['id' => $data['origin'], 'balance' => $this->accountService->getBalance($data['origin'])],
-            'destination' => ['id' => $data['destination'], 'balance' => $this->accountService->getBalance($data['destination'])]
+            'origin' => [
+                'id' => $data['origin'], 
+                'balance' => $this->accountService->getBalance($data['origin'])
+            ],
+            'destination' => [
+                'id' => $data['destination'], 
+                'balance' => $this->accountService->getBalance($data['destination'])
+            ]
         ], JsonResponse::HTTP_CREATED);
     }
 
