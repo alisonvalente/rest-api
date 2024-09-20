@@ -5,6 +5,7 @@ use App\Service\AccountService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Response;
 
 class AccountController
 {
@@ -23,13 +24,13 @@ class AccountController
     /**
      * Resets the account service.
      *
-     * @return JsonResponse An empty JSON response with a 200 OK status code.
+     * @return Response An HTTP response indicating success.
      */
     #[Route('/reset', methods: ['POST'])]
-    public function reset(): JsonResponse
+    public function reset(): Response
     {
         $this->accountService->reset();
-        return new JsonResponse(null, JsonResponse::HTTP_OK);
+        return new Response('OK', Response::HTTP_OK);
     }
 
     /**
