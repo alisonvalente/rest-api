@@ -10,11 +10,21 @@ class AccountController
 {
     private AccountService $accountService;
 
+    /**
+     * Initializes a new instance of the class.
+     *
+     * @param AccountService $accountService The account service instance.
+     */
     public function __construct(AccountService $accountService)
     {
         $this->accountService = $accountService;
     }
 
+    /**
+     * Resets the account service.
+     *
+     * @return JsonResponse An empty JSON response with a 200 OK status code.
+     */
     #[Route('/reset', methods: ['POST'])]
     public function reset(): JsonResponse
     {
@@ -22,6 +32,12 @@ class AccountController
         return new JsonResponse(null, JsonResponse::HTTP_OK);
     }
 
+    /**
+     * Retrieves the balance of an account based on the provided account ID.
+     *
+     * @param Request $request The HTTP request containing the account ID query parameter.
+     * @return JsonResponse The account balance if found, otherwise an error response.
+     */
     #[Route('/balance', methods: ['GET'])]
     public function getBalance(Request $request): JsonResponse
     {
@@ -34,6 +50,12 @@ class AccountController
         return $balance !== null ? new JsonResponse($balance, JsonResponse::HTTP_OK) : new JsonResponse(0, JsonResponse::HTTP_NOT_FOUND);
     }
 
+    /**
+     * Handles an event based on the provided event type.
+     *
+     * @param Request $request The HTTP request containing the event data.
+     * @return JsonResponse The response based on the event type, or an error response if the event type is invalid or missing.
+     */
     #[Route('/event', methods: ['POST'])]
     public function handleEvent(Request $request): JsonResponse
     {
@@ -52,6 +74,13 @@ class AccountController
         };
     }
 
+    /**
+     * Handles a deposit event by validating the provided data, creating the destination account if necessary, 
+     * and performing the deposit operation.
+     *
+     * @param array $data An array containing the deposit event data, including the destination account ID and the amount to deposit.
+     * @return JsonResponse A JSON response containing the updated balance of the destination account, or an error response if the deposit operation fails.
+     */
     private function handleDeposit(array $data): JsonResponse
     {
         if (!isset($data['destination'], $data['amount']) || !is_numeric($data['amount']) || $data['amount'] <= 0) {
@@ -69,6 +98,14 @@ class AccountController
         ], JsonResponse::HTTP_CREATED);
     }
 
+    /**
+     * Handles a withdraw event by validating the provided data, checking the origin account balance, 
+     * and performing the withdraw operation.
+     *
+     * @param array $data An array containing the withdraw event data, including the origin account ID and the amount to withdraw.
+     * @throws None
+     * @return JsonResponse A JSON response containing the updated balance of the origin account, or an error response if the withdraw operation fails.
+     */
     private function handleWithdraw(array $data): JsonResponse
     {
         if (!isset($data['origin'], $data['amount']) || !is_numeric($data['amount']) || $data['amount'] <= 0) {
@@ -89,6 +126,16 @@ class AccountController
         ], JsonResponse::HTTP_CREATED);
     }
 
+    /**
+     * Handles a transfer event by validating the provided data, checking the origin account balance, 
+     * and performing the transfer operation.
+     *
+     * @param array $data An array containing the transfer event data, including the origin account ID, 
+     *                     the destination account ID, and the amount to transfer.
+     * @throws None
+     * @return JsonResponse A JSON response containing the updated balances of the origin and destination accounts, 
+     *                      or an error response if the transfer operation fails.
+     */
     private function handleTransfer(array $data): JsonResponse
     {
         if (!isset($data['origin'], $data['destination'], $data['amount']) || !is_numeric($data['amount']) || $data['amount'] <= 0) {
@@ -116,6 +163,12 @@ class AccountController
         ], JsonResponse::HTTP_CREATED);
     }
 
+    /**
+     * Creates a new account with a balance of 0 if the account ID does not already exist.
+     *
+     * @param string $accountId The ID of the account to create if it does not exist.
+     * @return void
+     */
     private function createAccountIfNotExists(string $accountId): void
     {
         if ($this->accountService->getBalance($accountId) === null) {
